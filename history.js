@@ -1,52 +1,108 @@
-// Get data from localStoraggfythfytdryrje
-let suggestions = JSON.parse(localStorage.getItem('suggestions')) || [];
+const SEARCH_HISTORY_KEY = 'searchHistory';
+const VIEW_HISTORY_KEY = 'viewHistory';
+
+function getFromLocalStorage(key) {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : null;
+}
+
+function normalizeSearchHistory(rawHistory) {
+    if (!Array.isArray(rawHistory)) return [];
+    return rawHistory.map(entry => {
+        if (typeof entry === 'string') {
+            return {
+                query: entry,
+                timestamp: new Date().toISOString()
+            };
+        }
+        if (entry && typeof entry.query === 'string') {
+            return {
+                query: entry.query,
+                timestamp: entry.timestamp || new Date().toISOString()
+            };
+        }
+        return null;
+    }).filter(Boolean);
+}
+
+function formatTimestamp(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toLocaleString();
+}
 
 function renderSearchHistory() {
-    const historyList = document.getElementById('history-list');
-    historyList.innerHTML = '';
+    const listElement = document.getElementById('searchHistoryList');
+    const emptyMessage = document.getElementById('searchHistoryEmptyMessage');
 
-    if (suggestions.length === 0) {
-        historyList.innerHTML = '<div class="empty-state">No search history found.</div>';
+    let history = normalizeSearchHistory(getFromLocalStorage(SEARCH_HISTORY_KEY) || []);
+
+    listElement.innerHTML = '';
+
+    if (!history.length) {
+        emptyMessage.style.display = 'block';
         return;
     }
 
-    // Sort by time descending (Newest first)
-    suggestions.sort((a, b) => b.time - a.time);
+    emptyMessage.style.display = 'none';
 
-    suggestions.forEach((item, index) => {
-        const historyCard = document.createElement('div');
-        historyCard.className = 'history-item';
-        
-        const query = typeof item === 'object' ? item.query : item;
-        const time = typeof item === 'object' ? new Date(item.time).toLocaleString() : 'N/A';
-
-        historyCard.innerHTML = `
-            <div class="query-info">
-                <span class="query-text">${query}</span>
-                <span class="query-time"><i class="far fa-clock"></i> ${time}</span>
-            </div>
-            <div class="delete-btn" onclick="deleteHistoryItem(${index})">
-                <i class="fas fa-trash-can"></i>
-            </div>
+    history.forEach(entry => {
+        const li = document.createElement('li');
+        li.className = 'history-item';
+        li.innerHTML = `
+            <span class="history-query">${entry.query}</span>
+            <span class="history-timestamp">${formatTimestamp(entry.timestamp)}</span>
         `;
-        historyList.appendChild(historyCard);
+        listElement.appendChild(li);
     });
 }
 
-// Function to delete a single item
-window.deleteHistoryItem = (index) => {
-    suggestions.splice(index, 1);
-    localStorage.setItem('suggestions', JSON.stringify(suggestions));
-    renderSearchHistory();
-};
+function renderViewHistory() {
+    const gridElement = document.getElementById('viewHistoryGrid');
+    const emptyMessage = document.getElementById('viewHistoryEmptyMessage');
 
-// Function to clear everything
-document.getElementById('clear-all').addEventListener('click', () => {
-    if (confirm('Are you sure you want to clear all history?')) {
-        suggestions = [];
-        localStorage.removeItem('suggestions');
-        renderSearchHistory();
+    let history = getFromLocalStorage(VIEW_HISTORY_KEY) || [];
+
+    gridElement.innerHTML = '';
+
+    if (!history.length) {
+        emptyMessage.style.display = 'block';
+        return;
     }
-});
 
-document.addEventListener('DOMContentLoaded', renderSearchHistory);
+    emptyMessage.style.display = 'none';
+
+    history.forEach(product => {
+        const card = document.createElement('a');
+        card.href = `product.html?id=${product.id}`;
+        card.className = 'view-history-card';
+        card.innerHTML = `
+            <img src="${product.thumbnail}" alt="${product.title}">
+            <div class="view-history-info">
+                <h4>${product.title}</h4>
+                <span class="view-history-price">$${product.price}</span>
+                <span class="view-history-time">${formatTimestamp(product.timestamp)}</span>
+            </div>
+        `;
+        gridElement.appendChild(card);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const clearSearchBtn = document.getElementById('clearSearchHistoryBtn');
+    const clearViewBtn = document.getElementById('clearViewHistoryBtn');
+
+    renderSearchHistory();
+    renderViewHistory();
+
+    clearSearchBtn.addEventListener('click', () => {
+        localStorage.removeItem(SEARCH_HISTORY_KEY);
+        renderSearchHistory();
+    });
+
+    clearViewBtn.addEventListener('click', () => {
+        localStorage.removeItem(VIEW_HISTORY_KEY);
+        renderViewHistory();
+    });
+});

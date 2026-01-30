@@ -1,152 +1,205 @@
+const apiUrl = 'https://dummyjson.com/products';
+const searchApiUrl = 'https://dummyjson.com/products/search?q=';
 
-// document.addEventListener("DOMContentLoaded", function () {
-// const content = document.getElementById("content");
+const container = document.getElementById('product-container');
+const searchInput = document.getElementById('searchInput');
+const searchButton = document.getElementById('searchBtn');
+const suggestionContainer = document.getElementById('suggestions-container');
+let products = {};
+const SEARCH_HISTORY_KEY = 'searchHistory';
 
-// fetch("https://dummyjson.com/products")
-//     .then(response => response.json())
-//     .then(data => {
-//         data.products.forEach(product => {
-//             const productElement = document.createElement("div");
+function fetchProducts(url) {
+    return fetch(url)
+        .then(res => res.json())
+        .catch(err => {
+            console.error(err);
+            return { products: [] };
+        });
+}
+
+
+// function displayProducts(products, container) {
+//     container.innerHTML = '';
+//     products.forEach(product => {
+//         const card = document.createElement('div');
+//         card.className = 'product-card';
             
-
-//             productElement.innerHTML = `
-//                 <h2>${product.title}</h2>
-//                 <p>${product.description}</p>
-//                 <img src="${product.thumbnail}" alt="${product.title}" target="_blank"  >
-//                 <p>Price: $${product.price}</p>
-//             `;
-
-//             content.appendChild(productElement);
-//         });
-//     })
-//     .catch(error =>
-//         console.error("Error fetching products:", error)
-//     );
-// });
-    
-//    const searchbtn = document.getElementById("searchbtn");
-//     const searchInput = document.getElementById("searchInput");
-//     searchbtn.addEventListener("click", (e) => {
-//         const query = searchInput.value.toLowerCase();
-//         const filterProducts = fetch(`https://dummyjson.com/products/search?q=${query}`)
-//         .then(response => response.json())
-//         .then(data => {
-//             products= data.products;
-//             content.innerHTML = ""; // Clear previous results
-//             data.products.forEach(product => {
-//                 const productElement = document.createElement("div");
-//                 productElement.innerHTML = `
-//                 <img src="${product.thumbnail}"
-//                 alt="${product.title}" >
-//                 <h2>${product.title}</h2>
-//                 <p>${product.description}</p>
-//                 <p>Price: $${product.price}</p>
-//             `;
-
-//                 content.appendChild(productElement);
-//             });
-//         });
-//     });
-
-
-//  // save suggeston to lo'cal storage
-//      let suggeston = JSON.parse(localStorage.getItem("suggeston")) || [];
-//      if (!suggeston.includes(query)) {
-//          suggeston.push(query);
-//          localStorage.setItem("suggeston", JSON.stringify(suggeston));
-//      }
-     
-//        clear siuggerstion
-//         suggestionbox=innerHTML="";
-
-
-// Function to render products
-function renderProducts(products) {
-    const box = document.getElementById('box');
-    box.innerHTML = '';
-    products.forEach(product => {
-        const div = document.createElement('div');
-        div.className = 'product-box';
-        div.dataset.productId = product.id;
+//         card.innerHTML = `
+//             <img src="${product.thumbnail}" alt="${product.title}">
+//             <h3>${product.title}</h3>
+//             <p class="price">$${product.price}</p>
+//             <script>card.onclick = () => {
+//                 window.open(`./product.html?id=${product.id}`, '_blank');
+//             };</script>
+//         `;
         
-        div.innerHTML = `
-            <img src="${product.thumbnail || product.images[0]}">
-            <h2>${product.title}</h2>
-            <div class="price">$${product.price}</div>
+//         container.appendChild(card);
+//     });
+// }
+
+function displayProducts(products, container) {
+    container.innerHTML = '';
+
+    products.forEach(product => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+
+        // 👇 store the REAL product id
+        card.dataset.productId = product.id;
+
+        card.innerHTML = `
+            <img src="${product.thumbnail}" alt="${product.title}">
+            <h3>${product.title}</h3>
+            <p class="price">$${product.price}</p>
         `;
 
-        div.addEventListener('click', () => {
-            window.open(`./productdetails.html?id=${product.id}`, '_blank');
+        card.addEventListener('click', () => {
+            const pid = card.dataset.productId;
+            window.location.href = `./product.html?id=${pid}`;
         });
 
-        box.appendChild(div);
+        container.appendChild(card);
     });
 }
 
-// Initial Fetch
-fetch('https://dummyjson.com/products')
-    .then(res => res.json())
-    .then(data => {
-        renderProducts(data.products);
-    })
-    .catch(err => console.error('Error fetching products:', err));
+function displaySuggestions(items, container) {
+    container.innerHTML = '';
 
-// Search functionality
-document.getElementById('search').addEventListener('click', () => {
-    const query = document.getElementById('searchInput').value.toLowerCase().trim();
-    if (!query) return;
-
-    fetch('https://dummyjson.com/products')
-        .then(res => res.json())
-        .then(data => {
-            const filteredProduct = data.products.filter(product => 
-                product.title.toLowerCase().includes(query)
-            );
-            renderProducts(filteredProduct);
-        });
-
-    // Save unique suggestions to local storage
-    let suggestions = JSON.parse(localStorage.getItem('suggestions')) || [];
-    const isDuplicate = suggestions.some(item => item.query === query);
-    
-    if (!isDuplicate) {
-        suggestions.push({ query: query, time: Date.now() });
-        localStorage.setItem('suggestions', JSON.stringify(suggestions));
-    }
-    
-    document.getElementById('suggestion').innerHTML = ''; // Clear suggestions after search
-});
-
-// Real-time Suggestions logic
-const suggestionDiv = document.getElementById('suggestion');
-const searchInput = document.getElementById('searchInput');
-
-searchInput.addEventListener('input', () => {
-    const query = searchInput.value.toLowerCase().trim();
-    
-    if (!query) {
-        suggestionDiv.innerHTML = '';
+    if (!items.length) {
+        container.style.display = 'none';
         return;
     }
 
-    const suggestions = JSON.parse(localStorage.getItem('suggestions')) || [];
-
-    // Filter suggestions based on input
-    const filteredSuggestions = suggestions.filter(item => 
-        item.query.toLowerCase().includes(query)
-    );
-
-    suggestionDiv.innerHTML = '';
-
-    filteredSuggestions.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'suggestion-item';
-        div.innerText = item.query;   
-        div.addEventListener('click', () => {
-            searchInput.value = item.query;
-            suggestionDiv.innerHTML = '';
-            document.getElementById('search').click(); // Auto-trigger search on click
+    items.forEach(item => {
+        const suggestion = document.createElement('div');
+        suggestion.className = 'suggestion';
+        suggestion.innerHTML = `
+            <span class="suggestion-text">${item.title}</span>
+        `;
+        suggestion.addEventListener('click', () => {
+            searchInput.value = item.title;
+            container.style.display = 'none';
         });
-        suggestionDiv.appendChild(div);
+        container.appendChild(suggestion);
+    });
+
+    container.style.display = 'block';
+}
+
+function getFromLocalStorage(key) {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : null;
+}  
+
+function saveToLocalStorage(key, data) {
+    localStorage.setItem(key, JSON.stringify(data));
+}
+
+// helpers to normalize and manage search history with timestamps
+function normalizeHistory(rawHistory) {
+    if (!Array.isArray(rawHistory)) return [];
+    return rawHistory.map(entry => {
+        if (typeof entry === 'string') {
+            return {
+                query: entry,
+                timestamp: new Date().toISOString()
+            };
+        }
+        if (entry && typeof entry.query === 'string') {
+            return {
+                query: entry.query,
+                timestamp: entry.timestamp || new Date().toISOString()
+            };
+        }
+        return null;
+    }).filter(Boolean);
+}
+
+function addQueryToHistory(query) {
+    if (!query) return;
+    let history = normalizeHistory(getFromLocalStorage(SEARCH_HISTORY_KEY) || []);
+
+    const lowerQuery = query.toLowerCase();
+    const exists = history.some(entry => entry.query.toLowerCase() === lowerQuery);
+    if (!exists) {
+        history.unshift({
+            query,
+            timestamp: new Date().toISOString()
+        });
+        history = history.slice(0, 10); // keep last 10 queries
+        saveToLocalStorage(SEARCH_HISTORY_KEY, history);
+    }
+}
+
+function showHistorySuggestions(prefix = '') {
+    let history = normalizeHistory(getFromLocalStorage(SEARCH_HISTORY_KEY) || []);
+    if (prefix) {
+        const lowerPrefix = prefix.toLowerCase();
+        history = history.filter(entry =>
+            entry.query.toLowerCase().startsWith(lowerPrefix)
+        );
+    }
+    const items = history.map(entry => ({ title: entry.query }));
+    displaySuggestions(items, suggestionContainer);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+   
+    fetchProducts(apiUrl)
+        .then(data => {
+            products = data.products;
+            container.innerHTML = '';
+            displayProducts(data.products, container);
+        })
+        .catch(err => {
+            console.error(err);
+        });
+
+    // show history when user focuses the input
+    searchInput.addEventListener('focus', () => {
+        if (!searchInput.value) {
+            showHistorySuggestions();
+        }
+    });
+
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+
+        if (!query) {
+            // empty -> show previous search queries
+            showHistorySuggestions();
+            return;
+        }
+
+        // live product suggestions
+        const filteredProducts = products.filter(product =>
+            product.title.toLowerCase().includes(query)
+        );
+        displaySuggestions(filteredProducts, suggestionContainer);
+    });
+
+    searchInput.addEventListener('blur', () => {
+        // Slight delay so click events on suggestions still register
+        setTimeout(() => {
+            suggestionContainer.style.display = 'none';
+        }, 150);
+    });
+
+    searchButton.addEventListener('click', (e) => {
+        const query = searchInput.value.toLowerCase().trim();
+        if (!query) return;
+
+        // save this query for future suggestions
+        addQueryToHistory(query);
+
+        fetchProducts(searchApiUrl + encodeURIComponent(query))
+            .then(data => {
+                products = data.products;
+                container.innerHTML = '';
+                displayProducts(data.products, container);
+            })
+            .catch(err => {
+                console.error(err);
+        });
     });
 });
