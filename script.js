@@ -67,11 +67,18 @@ function renderProducts(products) {
     products.forEach(product => {
         const div = document.createElement('div');
         div.className = 'product-box';
+        div.dataset.productId = product.id;
+        
         div.innerHTML = `
             <img src="${product.thumbnail || product.images[0]}">
             <h2>${product.title}</h2>
             <div class="price">$${product.price}</div>
         `;
+
+        div.addEventListener('click', () => {
+            window.open(`./productdetails.html?id=${product.id}`, '_blank');
+        });
+
         box.appendChild(div);
     });
 }
