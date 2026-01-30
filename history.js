@@ -1,4 +1,4 @@
-// Get data from localStorage
+// Get data from localStoraggfythfytdryrje
 let suggestions = JSON.parse(localStorage.getItem('suggestions')) || [];
 
 function renderSearchHistory() {
