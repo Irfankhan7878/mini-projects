@@ -22,7 +22,15 @@ function renderProducts() {
     img.alt = product.title;
     img.style.width = "100%";
     img.style.height = "150px";
-    img.style.objectFit = "contain"; // "contain" looks better for varying image sizes
+
+
+
+    
+    img.style.objectFit = "contain";
+
+
+
+
     img.style.marginBottom = "10px";
 
     let title = document.createElement("h3");

@@ -17,51 +17,25 @@ function fetchProducts(url) {
         });
 }
 
-
-// function displayProducts(products, container) {
-//     container.innerHTML = '';
-//     products.forEach(product => {
-//         const card = document.createElement('div');
-//         card.className = 'product-card';
-            
-//         card.innerHTML = `
-//             <img src="${product.thumbnail}" alt="${product.title}">
-//             <h3>${product.title}</h3>
-//             <p class="price">$${product.price}</p>
-//             <script>card.onclick = () => {
-//                 window.open(`./product.html?id=${product.id}`, '_blank');
-//             };</script>
-//         `;
-        
-//         container.appendChild(card);
-//     });
-// }
-
 function displayProducts(products, container) {
     container.innerHTML = '';
 
     products.forEach(product => {
         const card = document.createElement('div');
         card.className = 'product-card';
-
-        // 👇 store the REAL product id
         card.dataset.productId = product.id;
-
         card.innerHTML = `
             <img src="${product.thumbnail}" alt="${product.title}">
             <h3>${product.title}</h3>
             <p class="price">$${product.price}</p>
         `;
-
         card.addEventListener('click', () => {
             const pid = card.dataset.productId;
             window.location.href = `./product.html?id=${pid}`;
         });
-
         container.appendChild(card);
     });
 }
-
 function displaySuggestions(items, container) {
     container.innerHTML = '';
 
