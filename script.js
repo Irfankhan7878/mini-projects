@@ -17,26 +17,6 @@ function fetchProducts(url) {
         });
 }
 
-
-// function displayProducts(products, container) {
-//     container.innerHTML = '';
-//     products.forEach(product => {
-//         const card = document.createElement('div');
-//         card.className = 'product-card';
-            
-//         card.innerHTML = `
-//             <img src="${product.thumbnail}" alt="${product.title}">
-//             <h3>${product.title}</h3>
-//             <p class="price">$${product.price}</p>
-//             <script>card.onclick = () => {
-//                 window.open(`./product.html?id=${product.id}`, '_blank');
-//             };</script>
-//         `;
-        
-//         container.appendChild(card);
-//     });
-// }
-
 function displayProducts(products, container) {
     container.innerHTML = '';
 
