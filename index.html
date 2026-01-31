@@ -9,7 +9,7 @@
 <body>
     <header>
         <h1>My Product Store</h1>
-        <div class="header-actions">
+        <div class="header-actions">  
             <div class="search-wrapper">
                 <input type="text" id="searchInput" placeholder="Search products..." />
                 <button type="submit" id="searchBtn" for="search">Search</button>
@@ -23,6 +23,11 @@
     <main id="product-container">
         <p>Loading products...</p>
     </main>
+    <div class="pagination-controls" style="display:flex;justify-content:center;align-items:center;gap:12px;padding:12px;">
+        <button id="prevBtn">Previous</button>
+        <span id="pageInfo"></span>
+        <button id="nextBtn">Next</button>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>
