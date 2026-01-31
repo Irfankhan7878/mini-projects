@@ -8,6 +8,13 @@ const suggestionContainer = document.getElementById('suggestions-container');
 let products = {};
 const SEARCH_HISTORY_KEY = 'searchHistory';
 
+// Pagination state
+let currPage = 1;
+const itemsPerPage = 12;
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const pageInfo = document.getElementById('pageInfo');
+
 function fetchProducts(url) {
     return fetch(url)
         .then(res => res.json())
@@ -35,6 +42,22 @@ function displayProducts(products, container) {
         });
         container.appendChild(card);
     });
+}
+
+function renderPage() {
+    if (!Array.isArray(products)) products = [];
+    const total = products.length;
+    const totalPages = Math.max(1, Math.ceil(total / itemsPerPage));
+    if (currPage > totalPages) currPage = totalPages;
+    const start = (currPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const pageItems = products.slice(start, end);
+
+    displayProducts(pageItems, container);
+
+    if (pageInfo) pageInfo.innerText = `Page ${currPage} of ${totalPages}`;
+    if (prevBtn) prevBtn.disabled = currPage === 1;
+    if (nextBtn) nextBtn.disabled = currPage === totalPages;
 }
 function displaySuggestions(items, container) {
     container.innerHTML = '';
@@ -121,9 +144,9 @@ document.addEventListener('DOMContentLoaded', () => {
    
     fetchProducts(apiUrl)
         .then(data => {
-            products = data.products;
-            container.innerHTML = '';
-            displayProducts(data.products, container);
+            products = data.products || [];
+            currPage = 1;
+            renderPage();
         })
         .catch(err => {
             console.error(err);
@@ -168,12 +191,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
         fetchProducts(searchApiUrl + encodeURIComponent(query))
             .then(data => {
-                products = data.products;
-                container.innerHTML = '';
-                displayProducts(data.products, container);
+                products = data.products || [];
+                currPage = 1;
+                renderPage();
             })
             .catch(err => {
                 console.error(err);
         });
     });
+
+    // Pagination button handlers
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (currPage > 1) {
+                currPage--;
+                renderPage();
+            }
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            const totalPages = Math.max(1, Math.ceil((Array.isArray(products) ? products.length : 0) / itemsPerPage));
+            if (currPage < totalPages) {
+                currPage++;
+                renderPage();
+            }
+        });
+    }
 });
